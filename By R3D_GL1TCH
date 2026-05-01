@@ -1,87 +1,35 @@
--- [[ LOADER COM GUI E DETECTOR DE CORPO QUADRADO - REI AMIGA ]]
+-- [[ MEGA LOADER - REI AMIGA ]]
+-- Este script lê os seus links do GitHub e executa um por um.
 
 local links = {
-    ["Script 5 (Braço/Ajuste)"] = "https://raw.githubusercontent.com/paulotnlopes1-commits/Normalmente5/refs/heads/main/1439878",
-    ["Script 4 (Pernas)"] = "https://raw.githubusercontent.com/paulotnlopes1-commits/Normalmente4/refs/heads/main/145234",
-    ["Script 3 (Glúteos)"] = "https://raw.githubusercontent.com/paulotnlopes1-commits/Normalmente3/refs/heads/main/44388789",
-    ["Script 2 (Peitoral)"] = "https://raw.githubusercontent.com/paulotnlopes1-commits/Normalmente2/refs/heads/main/1134214",
-    ["Script 1 (Barriga)"] = "https://raw.githubusercontent.com/paulotnlopes1-commits/Normalmente1/refs/heads/main/Nsei"
+    "https://raw.githubusercontent.com/paulotnlopes1-commits/Normalmente5/refs/heads/main/1439878",
+    "https://raw.githubusercontent.com/paulotnlopes1-commits/Normalmente4/refs/heads/main/145234",
+    "https://raw.githubusercontent.com/paulotnlopes1-commits/Normalmente3/refs/heads/main/44388789",
+    "https://raw.githubusercontent.com/paulotnlopes1-commits/Normalmente2/refs/heads/main/1134214",
+    "https://raw.githubusercontent.com/paulotnlopes1-commits/Normalmente1/refs/heads/main/Nsei"
 }
 
--- FUNÇÃO: Verifica se o corpo é o clássico quadrado (R6)
-local function eQuadrado(char)
-    if char:FindFirstChild("Torso") and not char:FindFirstChild("UpperTorso") then
-        return true -- É R6 Quadrado
-    end
-    return false
-end
+print("Iniciando o carregamento dos scripts...")
 
--- FUNÇÃO: Executa o script em um alvo específico
-local function executarNoAlvo(url, alvo)
-    local success, scriptText = pcall(function() return game:HttpGet(url) end)
-    if success then
-        -- Substituindo referências globais para o alvo selecionado dentro do script carregado
-        _G.SelectedTarget = alvo
-        local exec = loadstring(scriptText)
-        if exec then pcall(exec) end
-    end
-end
-
--- [[ CRIANDO A INTERFACE (GUI) ]]
-local sg = Instance.new("ScreenGui", game.CoreGui)
-local frame = Instance.new("Frame", sg)
-frame.Size = UDim2.new(0, 200, 0, 250)
-frame.Position = UDim2.new(0, 50, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.Active = true
-frame.Draggable = true
-
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0, 30)
-title.Text = "Selecione a Ordem"
-title.TextColor3 = Color3.new(1,1,1)
-title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-
-local layout = Instance.new("UIListLayout", frame)
-layout.Padding = UDim.new(0, 5)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-
--- Criar botões para cada link
-for nome, url in pairs(links) do
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(1, -10, 0, 35)
-    btn.Text = nome
-    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-    btn.TextColor3 = Color3.new(1,1,1)
-
-    btn.MouseButton1Click:Connect(function()
-        btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Fica verde ao clicar
-        
-        -- 1. Executa em você (se for quadrado)
-        if eQuadrado(game.Players.LocalPlayer.Character) then
-            executarNoAlvo(url, game.Players.LocalPlayer.Character)
-        end
-        
-        -- 2. Executa em todos os NPCs quadrados do mapa
-        for _, obj in pairs(workspace:GetDescendants()) do
-            if obj:IsA("Model") and obj:FindFirstChild("Humanoid") then
-                if not game.Players:GetPlayerFromCharacter(obj) then -- Se for NPC
-                    if eQuadrado(obj) then
-                        executarNoAlvo(url, obj)
-                    end
-                end
-            end
-        end
-        print("Executado: " .. nome)
+for i, url in ipairs(links) do
+    local success, result = pcall(function()
+        -- O Delta usa 'game:HttpGet' para ler o conteúdo de sites
+        return game:HttpGet(url)
     end)
+
+    if success and result then
+        print("Carregado script " .. i .. " com sucesso!")
+        
+        -- 'loadstring' transforma o texto do site em código funcional
+        local exec, err = loadstring(result)
+        if exec then
+            exec() -- Executa o código
+        else
+            warn("Erro ao transformar texto em script " .. i .. ": " .. tostring(err))
+        end
+    else
+        warn("Falha ao baixar o script da URL " .. i .. ": " .. tostring(result))
+    end
 end
 
-local info = Instance.new("TextLabel", frame)
-info.Size = UDim2.new(1, 0, 0, 40)
-info.Text = "Aplica apenas em corpos R6 Quadrados"
-info.TextWrapped = true
-info.FontSize = Enum.FontSize.Size10
-info.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-info.BackgroundTransparency = 1
-
-print("Interface de seleção carregada, Rei amiga!")
+print("Todos os scripts foram processados, Rei amiga!")
